@@ -1,262 +1,85 @@
 package org.example;
-
 import java.util.*;
+import java.util.stream.Collectors;
 
-class Person {
-    private String name;
-    private double money;
-    private List<Product> packageProducts;
-
-    public Person(String name, double money) {
-        if (name == null || name.trim().isEmpty()) {
-            throw new IllegalArgumentException("Имя не может быть пустым");
-        }
-        if (name.length() < 3) {
-            throw new IllegalArgumentException("Имя не может быть короче 3 символов");
-        }
-        if (money < 0) {
-            throw new IllegalArgumentException("Деньги не могут быть отрицательными");
-        }
-
-        this.name = name;
-        this.money = money;
-        this.packageProducts = new ArrayList<>();
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public double getMoney() {
-        return money;
-    }
-
-    public void deductMoney(double amount) {
-        this.money -= amount;
-    }
-
-    public List<Product> getPackageProducts() {
-        return packageProducts;
-    }
-
-    public void addProduct(Product product) {
-        packageProducts.add(product);
-    }
-
-    @Override
-    public String toString() {
-        return "Person{" +
-                "name='" + name + '\'' +
-                ", money=" + money +
-                ", packageProducts=" + packageProducts +
-                '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Person person = (Person) o;
-
-        if (Double.compare(person.money, money) != 0) return false;
-        if (!name.equals(person.name)) return false;
-        return packageProducts.equals(person.packageProducts);
-    }
-
-    @Override
-    public int hashCode() {
-        int result;
-        long temp;
-        result = name.hashCode();
-        temp = Double.doubleToLongBits(money);
-        result = 31 * result + (int) (temp ^ (temp >>> 32));
-        result = 31 * result + packageProducts.hashCode();
-        return result;
-    }
-}
-
-class Product {
-    private String name;
-    private double price;
-
-    public Product(String name, double price) {
-        if (name == null || name.trim().isEmpty()) {
-            throw new IllegalArgumentException("Название продукта не может быть пустым");
-        }
-        if (price < 0) {
-            throw new IllegalArgumentException("Стоимость не может быть отрицательной");
-        }
-        this.name = name;
-        this.price = price;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public double getPrice() {
-        return price;
-    }
-
-    @Override
-    public String toString() {
-        return name + " (" + price + ")";
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Product product = (Product) o;
-
-        if (Double.compare(product.price, price) != 0) return false;
-        return name.equals(product.name);
-    }
-
-    @Override
-    public int hashCode() {
-        int result;
-        long temp = Double.doubleToLongBits(price);
-        result = name.hashCode();
-        result = 31 * result + (int) (temp ^ (temp >>> 32));
-        return result;
-    }
-}
-
-class App {
+public class Main {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
+        PowerfulSet ps = new PowerfulSet();
 
-        Map<String, Person> buyers = new HashMap<>();
-        Map<String, Product> productsMap = new HashMap<>();
+        System.out.println("Выберите операцию:");
+        System.out.println("1 - Пересечение (intersection)");
+        System.out.println("2 - Объединение (union)");
+        System.out.println("3 - Уникальность (relativeComplement)");
+        System.out.print("Введите номер операции (1, 2 или 3): ");
 
-        // Ввод покупателей
-        System.out.println("Введите список покупателей в формате \"Имя=Сумма\" (например: Ivan=100):");
-        String buyersLine = scanner.nextLine();
-        String[] buyersEntries = buyersLine.split(",");
-        for (String entry : buyersEntries) {
-            String[] parts = entry.trim().split("=");
-            if (parts.length != 2) {
-                System.out.println("Некорректный формат покупателя: " + entry);
-                continue;
-            }
-            String name = parts[0].trim();
-            String sumStr = parts[1].trim();
-            try {
-                checkName(name);
-                double money = Double.parseDouble(sumStr);
-                if (money < 0) {
-                    System.out.println("Деньги не могут быть отрицательными");
-                    continue;
-                }
-                Person person = new Person(name, money);
-                buyers.put(name, person);
-            } catch (NumberFormatException e) {
-                System.out.println("Некорректное число: " + sumStr);
-            } catch (IllegalArgumentException e) {
-                System.out.println(e.getMessage());
-            }
-        }
+        int choice = scanner.nextInt();
+        scanner.nextLine(); // очистка буфера
 
-        // Ввод продуктов
-        System.out.println("Введите список продуктов в формате \"Название=Цена\" (например: Bread=10):");
-        String productsLine = scanner.nextLine();
-        String[] productsEntries = productsLine.split(",");
-        for (String entry : productsEntries) {
-            String[] parts = entry.trim().split("=");
-            if (parts.length != 2) {
-                System.out.println("Некорректный формат продукта: " + entry);
-                continue;
-            }
-            String name = parts[0].trim();
-            String priceStr = parts[1].trim();
-            try {
-                checkProductName(name);
-                double price = Double.parseDouble(priceStr);
-                if (price < 0) {
-                    System.out.println("Стоимость не может быть отрицательной");
-                    continue;
-                }
-                Product product = new Product(name, price);
-                productsMap.put(name, product);
-            } catch (NumberFormatException e) {
-                System.out.println("Некорректное число: " + priceStr);
-            } catch (IllegalArgumentException e) {
-                System.out.println(e.getMessage());
-            }
-        }
+        System.out.print("Введите первую строку, элементы через запятую: ");
+        String input1 = scanner.nextLine();
+        System.out.print("Введите вторую строку, элементы через запятую: ");
+        String input2 = scanner.nextLine();
 
-        // Обработка покупок
-        System.out.println("Для покупки введите строки в формате \"Имя - Название продукта\", или \"END\" для завершения:");
-        String line;
-        while (true) {
-            line = scanner.nextLine();
-            if (line.equalsIgnoreCase("END")) {
+        Set<String> set1 = parseInputToSet(input1);
+        Set<String> set2 = parseInputToSet(input2);
+
+        switch (choice) {
+            case 1:
+                Set<String> intersection = ps.intersection(set1, set2);
+                System.out.println("Результат пересечения: " + setToString(intersection));
                 break;
-            }
-            String[] parts = line.split("-");
-            if (parts.length != 2) {
-                System.out.println("Некорректный формат ввода: " + line);
-                continue;
-            }
-            String buyerName = parts[0].trim();
-            String productName = parts[1].trim();
-
-            if (!buyers.containsKey(buyerName)) {
-                System.out.println("Покупатель с именем " + buyerName + " не найден");
-                continue;
-            }
-            if (!productsMap.containsKey(productName)) {
-                System.out.println("Продукт с названием " + productName + " не найден");
-                continue;
-            }
-
-            Person person = buyers.get(buyerName);
-            Product product = productsMap.get(productName);
-
-            if (person.getMoney() >= product.getPrice()) {
-                person.deductMoney(product.getPrice());
-                person.addProduct(product);
-            } else {
-                System.out.println(person.getName() + " не может позволить себе " + product.getName());
-            }
-        }
-
-        // Вывод результатов
-        System.out.println("Результаты покупок:");
-        for (Person person : buyers.values()) {
-            List<Product> purchasedProducts = person.getPackageProducts();
-            if (purchasedProducts.isEmpty()) {
-                System.out.println(person.getName() + " - Ничего не куплено");
-            } else {
-                String productList = "";
-                for (int i = 0; i < purchasedProducts.size(); i++) {
-                    productList += purchasedProducts.get(i).getName();
-                    if (i != purchasedProducts.size() - 1) {
-                        productList += ", ";
-                    }
-                }
-                System.out.println(person.getName() + " - " + productList);
-            }
+            case 2:
+                Set<String> union = ps.union(set1, set2);
+                System.out.println("Результат объединения: " + setToString(union));
+                break;
+            case 3:
+                Set<String> relative = ps.relativeComplement(set1, set2);
+                System.out.println("Элементы первого набора без общих: " + setToString(relative));
+                break;
+            default:
+                System.out.println("Некорректный выбор операции.");
         }
 
         scanner.close();
     }
 
-    private static void checkName(String name) {
-        if (name == null || name.trim().isEmpty()) {
-            throw new IllegalArgumentException("Имя не может быть пустым");
-        }
-        if (name.length() < 3) {
-            throw new IllegalArgumentException("Имя не может быть короче 3 символов");
-        }
+
+    private static Set<String> parseInputToSet(String input) {
+        // Разделяем по запятой, удаляем лишние пробелы и фильтруем пустые
+        return Arrays.stream(input.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toSet());
     }
 
-    private static void checkProductName(String name) {
-        if (name == null || name.trim().isEmpty()) {
-            throw new IllegalArgumentException("Название продукта не может быть пустым");
-        }
+
+    private static String setToString(Set<String> set) {
+        return String.join(", ", set);
+    }
+}
+
+
+class PowerfulSet {
+
+
+    public <T> Set<T> intersection(Set<T> set1, Set<T> set2) {
+        Set<T> result = new HashSet<>(set1);
+        result.retainAll(set2);
+        return result;
+    }
+
+
+    public <T> Set<T> union(Set<T> set1, Set<T> set2) {
+        Set<T> result = new HashSet<>(set1);
+        result.addAll(set2);
+        return result;
+    }
+
+
+    public <T> Set<T> relativeComplement(Set<T> set1, Set<T> set2) {
+        Set<T> result = new HashSet<>(set1);
+        result.removeAll(set2);
+        return result;
     }
 }
