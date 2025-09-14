@@ -1,262 +1,117 @@
-package org.example;
+package test;
 
+import model.Car;
+import repository.CarsRepository;
+import repository.CarsRepositoryImpl;
+
+import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
-class Person {
-    private String name;
-    private double money;
-    private List<Product> packageProducts;
+class Main {
+    public static void main(String[] args) throws IOException {
+        // Исходные данные
+        String data =
+                "a123me|Mercedes|White|0|8300000\n" +
+                        "b873of|Volga|Black|0|673000\n" +
+                        "w487mn|Lexus|Grey|76000|900000\n" +
+                        "p987hj|Volga|Red|610|704340\n" +
+                        "c987ss|Toyota|White|254000|761000\n" +
+                        "o983op|Toyota|Black|698000|740000\n" +
+                        "p146op|BMW|White|271000|850000\n" +
+                        "u893ii|Toyota|Purple|210900|440000\n" +
+                        "l097df|Toyota|Black|108000|780000\n" +
+                        "y876wd|Toyota|Black|160000|1000000";
 
-    public Person(String name, double money) {
-        if (name == null || name.trim().isEmpty()) {
-            throw new IllegalArgumentException("Имя не может быть пустым");
-        }
-        if (name.length() < 3) {
-            throw new IllegalArgumentException("Имя не может быть короче 3 символов");
-        }
-        if (money < 0) {
-            throw new IllegalArgumentException("Деньги не могут быть отрицательными");
-        }
+        String inputFileName = "input.txt";
+        String outputFileName = "output.txt";
 
-        this.name = name;
-        this.money = money;
-        this.packageProducts = new ArrayList<>();
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public double getMoney() {
-        return money;
-    }
-
-    public void deductMoney(double amount) {
-        this.money -= amount;
-    }
-
-    public List<Product> getPackageProducts() {
-        return packageProducts;
-    }
-
-    public void addProduct(Product product) {
-        packageProducts.add(product);
-    }
-
-    @Override
-    public String toString() {
-        return "Person{" +
-                "name='" + name + '\'' +
-                ", money=" + money +
-                ", packageProducts=" + packageProducts +
-                '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Person person = (Person) o;
-
-        if (Double.compare(person.money, money) != 0) return false;
-        if (!name.equals(person.name)) return false;
-        return packageProducts.equals(person.packageProducts);
-    }
-
-    @Override
-    public int hashCode() {
-        int result;
-        long temp;
-        result = name.hashCode();
-        temp = Double.doubleToLongBits(money);
-        result = 31 * result + (int) (temp ^ (temp >>> 32));
-        result = 31 * result + packageProducts.hashCode();
-        return result;
-    }
-}
-
-class Product {
-    private String name;
-    private double price;
-
-    public Product(String name, double price) {
-        if (name == null || name.trim().isEmpty()) {
-            throw new IllegalArgumentException("Название продукта не может быть пустым");
-        }
-        if (price < 0) {
-            throw new IllegalArgumentException("Стоимость не может быть отрицательной");
-        }
-        this.name = name;
-        this.price = price;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public double getPrice() {
-        return price;
-    }
-
-    @Override
-    public String toString() {
-        return name + " (" + price + ")";
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Product product = (Product) o;
-
-        if (Double.compare(product.price, price) != 0) return false;
-        return name.equals(product.name);
-    }
-
-    @Override
-    public int hashCode() {
-        int result;
-        long temp = Double.doubleToLongBits(price);
-        result = name.hashCode();
-        result = 31 * result + (int) (temp ^ (temp >>> 32));
-        return result;
-    }
-}
-
-class App {
-    public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-
-        Map<String, Person> buyers = new HashMap<>();
-        Map<String, Product> productsMap = new HashMap<>();
-
-        // Ввод покупателей
-        System.out.println("Введите список покупателей в формате \"Имя=Сумма\" (например: Ivan=100):");
-        String buyersLine = scanner.nextLine();
-        String[] buyersEntries = buyersLine.split(",");
-        for (String entry : buyersEntries) {
-            String[] parts = entry.trim().split("=");
-            if (parts.length != 2) {
-                System.out.println("Некорректный формат покупателя: " + entry);
-                continue;
-            }
-            String name = parts[0].trim();
-            String sumStr = parts[1].trim();
-            try {
-                checkName(name);
-                double money = Double.parseDouble(sumStr);
-                if (money < 0) {
-                    System.out.println("Деньги не могут быть отрицательными");
-                    continue;
-                }
-                Person person = new Person(name, money);
-                buyers.put(name, person);
-            } catch (NumberFormatException e) {
-                System.out.println("Некорректное число: " + sumStr);
-            } catch (IllegalArgumentException e) {
-                System.out.println(e.getMessage());
-            }
+        // Запись данных в файл input.txt
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(inputFileName))) {
+            writer.write(data);
+            // Добавляем в конце дополнительные тестовые строки (по условию, например)
+            writer.newLine();
+            writer.write("Black, 0L");
+            writer.newLine();
+            writer.write("700_000L, 800_000L");
+            writer.newLine();
+            writer.write("Toyota");
+            writer.newLine();
+            writer.write("Volvo");
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
-        // Ввод продуктов
-        System.out.println("Введите список продуктов в формате \"Название=Цена\" (например: Bread=10):");
-        String productsLine = scanner.nextLine();
-        String[] productsEntries = productsLine.split(",");
-        for (String entry : productsEntries) {
-            String[] parts = entry.trim().split("=");
-            if (parts.length != 2) {
-                System.out.println("Некорректный формат продукта: " + entry);
-                continue;
-            }
-            String name = parts[0].trim();
-            String priceStr = parts[1].trim();
-            try {
-                checkProductName(name);
-                double price = Double.parseDouble(priceStr);
-                if (price < 0) {
-                    System.out.println("Стоимость не может быть отрицательной");
-                    continue;
-                }
-                Product product = new Product(name, price);
-                productsMap.put(name, product);
-            } catch (NumberFormatException e) {
-                System.out.println("Некорректное число: " + priceStr);
-            } catch (IllegalArgumentException e) {
-                System.out.println(e.getMessage());
-            }
-        }
+        // Создаем репозиторий и читаем данные
+        CarsRepository carsRepository = new CarsRepositoryImpl();
 
-        // Обработка покупок
-        System.out.println("Для покупки введите строки в формате \"Имя - Название продукта\", или \"END\" для завершения:");
-        String line;
-        while (true) {
-            line = scanner.nextLine();
-            if (line.equalsIgnoreCase("END")) {
-                break;
-            }
-            String[] parts = line.split("-");
-            if (parts.length != 2) {
-                System.out.println("Некорректный формат ввода: " + line);
-                continue;
-            }
-            String buyerName = parts[0].trim();
-            String productName = parts[1].trim();
-
-            if (!buyers.containsKey(buyerName)) {
-                System.out.println("Покупатель с именем " + buyerName + " не найден");
-                continue;
-            }
-            if (!productsMap.containsKey(productName)) {
-                System.out.println("Продукт с названием " + productName + " не найден");
-                continue;
-            }
-
-            Person person = buyers.get(buyerName);
-            Product product = productsMap.get(productName);
-
-            if (person.getMoney() >= product.getPrice()) {
-                person.deductMoney(product.getPrice());
-                person.addProduct(product);
-            } else {
-                System.out.println(person.getName() + " не может позволить себе " + product.getName());
-            }
-        }
-
-        // Вывод результатов
-        System.out.println("Результаты покупок:");
-        for (Person person : buyers.values()) {
-            List<Product> purchasedProducts = person.getPackageProducts();
-            if (purchasedProducts.isEmpty()) {
-                System.out.println(person.getName() + " - Ничего не куплено");
-            } else {
-                String productList = "";
-                for (int i = 0; i < purchasedProducts.size(); i++) {
-                    productList += purchasedProducts.get(i).getName();
-                    if (i != purchasedProducts.size() - 1) {
-                        productList += ", ";
+        try (BufferedReader br = new BufferedReader(new FileReader(inputFileName))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                // Проверяем, что строка содержит нужные данные
+                if (line.contains("|")) {
+                    String[] parts = line.split("\\|");
+                    if (parts.length == 5) {
+                        String number = parts[0];
+                        String model = parts[1];
+                        String color = parts[2];
+                        int mileage = Integer.parseInt(parts[3]);
+                        long cost = Long.parseLong(parts[4]);
+                        Car car = new Car(number, model, color, mileage, cost);
+                        carsRepository.addCar(car);
                     }
+                } else {
+                    // Обработка других строк, если нужно
                 }
-                System.out.println(person.getName() + " - " + productList);
             }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
-        scanner.close();
-    }
+        List<Car> cars = carsRepository.getAllCars();
 
-    private static void checkName(String name) {
-        if (name == null || name.trim().isEmpty()) {
-            throw new IllegalArgumentException("Имя не может быть пустым");
-        }
-        if (name.length() < 3) {
-            throw new IllegalArgumentException("Имя не может быть короче 3 символов");
-        }
-    }
+        // Записываем в файл результат
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFileName))) {
+            // Вывод всех автомобилей
+            bw.write("Автомобили в базе:\n");
+            bw.write(String.format("%-10s %-10s %-10s %-10s %-10s\n", "Number", "Model", "Color", "Mileage", "Cost"));
+            for (Car car : cars) {
+                bw.write(String.format("%-10s %-10s %-10s %-10d %-10d\n",
+                        car.getNumber(), car.getModel(), car.getColor(), car.getMileage(), car.getCost()));
+            }
 
-    private static void checkProductName(String name) {
-        if (name == null || name.trim().isEmpty()) {
-            throw new IllegalArgumentException("Название продукта не может быть пустым");
+            // 1) Цвет автомобиля с минимальной стоимостью
+            Optional<Car> minCostCarOpt = cars.stream()
+                    .min(Comparator.comparingLong(Car::getCost));
+            if (minCostCarOpt.isPresent()) {
+                String minCostColor = minCostCarOpt.get().getColor();
+                bw.write("\nЦвет автомобиля с минимальной стоимостью: " + minCostColor + "\n");
+            }
+
+            // 2) Средняя стоимость искомой модели
+            String modelToFind = "Toyota"; // Можно вынести в переменную или получать из входных данных
+            List<Car> carsOfModel = cars.stream()
+                    .filter(c -> c.getModel().equalsIgnoreCase(modelToFind))
+                    .collect(Collectors.toList());
+            double averageCost = carsOfModel.stream()
+                    .mapToLong(Car::getCost)
+                    .average()
+                    .orElse(0.0);
+            bw.write(String.format("Средняя стоимость модели %s: %.2f,\n", modelToFind, averageCost));
+
+            // Средняя стоимость модели Volvo, если есть
+            String modelVolvo = "Volvo";
+            List<Car> volvoCars = cars.stream()
+                    .filter(c -> c.getModel().equalsIgnoreCase(modelVolvo))
+                    .collect(Collectors.toList());
+            double avgVolvo = volvoCars.stream()
+                    .mapToLong(Car::getCost)
+                    .average()
+                    .orElse(0.0);
+            bw.write(String.format("Средняя стоимость модели %s: %.2f\n", modelVolvo, avgVolvo));
+
+            // Вывод на консоль (по желанию)
+            System.out.println("Обработка завершена. Результаты записаны в файл " + outputFileName);
         }
     }
 }
